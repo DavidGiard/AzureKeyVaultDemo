@@ -1,4 +1,5 @@
-﻿using Azure.Identity;
+﻿using Azure.Core.Diagnostics;
+using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using System;
 using System.Threading;
@@ -8,7 +9,7 @@ namespace AzureKeyVaultDemo
 {
     internal class Program
     {
-        const string KEYVAULTNAME = "KEY_VAULT_NAME"; // Set this to the name of your key vault
+        const string KEYVAULTNAME = "MY_KEY_VAULT_NAME"; // Set this to the name of your key vault
         static string keyVaultUri = $"https://{KEYVAULTNAME}.vault.azure.net";
         static SecretClient secretClient = null;
 
@@ -37,6 +38,9 @@ namespace AzureKeyVaultDemo
                 var secret = secretClient.GetSecret(setSecretName);
                 secret.Value.Properties.ContentType = "Demo Type";
                 secretClient.UpdateSecretProperties(secret.Value.Properties);
+
+                Console.WriteLine();
+                ListAllSecrets();
             }
 
             Console.Write("Input a Secret Name to soft delete (ENTER to skip):");
@@ -53,6 +57,10 @@ namespace AzureKeyVaultDemo
                 }
                 Console.WriteLine();
                 Console.WriteLine($"Secret {deleteSecretName} deleted!");
+
+                Console.WriteLine();
+                ListAllSecrets();
+
             }
 
             Console.Write("Input a Secret Name to permanently delete (ENTER to skip):");
@@ -71,9 +79,11 @@ namespace AzureKeyVaultDemo
                 Console.WriteLine($"Secret {purgeSecretName} deleted!");
                 secretClient.PurgeDeletedSecret(purgeSecretName);
                 Console.WriteLine($"Secret {purgeSecretName} purged!");
+
+                Console.WriteLine();
+                ListAllSecrets();
             }
 
-            ListAllSecrets();
 
             Console.WriteLine();
             Console.WriteLine("Done!");
@@ -81,7 +91,7 @@ namespace AzureKeyVaultDemo
 
         private static void ListAllSecrets()
         {
-            Console.WriteLine("All Secrets:");
+            Console.WriteLine("All not deleted Secrets with current values:");
             var allSecrets = secretClient.GetPropertiesOfSecrets();
             foreach (var secret in allSecrets)
             {
